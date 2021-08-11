@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/cars")
 class CarController {
+    private static final Logger log = LoggerFactory.getLogger(CarController.class);
 
     private final CarService carService;
     private final CarResourceAssembler assembler;
@@ -58,12 +61,8 @@ class CarController {
      */
     @GetMapping("/{id}")
     Resource<Car> get(@PathVariable Long id) {
-        /**
-         * TODO: Use the `findById` method from the Car Service to get car information.
-         * TODO: Use the `assembler` on that car and return the resulting output.
-         *   Update the first line as part of the above implementing.
-         */
-        return assembler.toResource(new Car());
+        Car car = carService.findById(id);
+        return assembler.toResource(car);
     }
 
     /**
@@ -74,12 +73,8 @@ class CarController {
      */
     @PostMapping
     ResponseEntity<?> post(@Valid @RequestBody Car car) throws URISyntaxException {
-        /**
-         * TODO: Use the `save` method from the Car Service to save the input car.
-         * TODO: Use the `assembler` on that saved car and return as part of the response.
-         *   Update the first line as part of the above implementing.
-         */
-        Resource<Car> resource = assembler.toResource(new Car());
+        Car newCar = carService.save(car);
+        Resource<Car> resource = assembler.toResource(newCar);
         return ResponseEntity.created(new URI(resource.getId().expand().getHref())).body(resource);
     }
 
@@ -97,7 +92,12 @@ class CarController {
          * TODO: Use the `assembler` on that updated car and return as part of the response.
          *   Update the first line as part of the above implementing.
          */
-        Resource<Car> resource = assembler.toResource(new Car());
+        log.error(car.toString());
+        car.setId(id);
+        log.error(car.toString());
+        Car updatedCar = carService.save(car);
+
+        Resource<Car> resource = assembler.toResource(updatedCar);
         return ResponseEntity.ok(resource);
     }
 
@@ -108,9 +108,7 @@ class CarController {
      */
     @DeleteMapping("/{id}")
     ResponseEntity<?> delete(@PathVariable Long id) {
-        /**
-         * TODO: Use the Car Service to delete the requested vehicle.
-         */
+        carService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
